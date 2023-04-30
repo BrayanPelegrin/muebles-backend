@@ -8,35 +8,70 @@ namespace MueblesDiamante.Controllers
     [ApiController]
     public class FurnitureController : ControllerBase
     {
-        public List<Furniture> muebles = new List<Furniture>()
+
+        private readonly ApplicationContext _context;
+        public FurnitureController(ApplicationContext context)
         {
-            new Furniture { Id = 1, Color = "Rojo", Descripcion = "Mueble Rojo de tela fina",
-            Image = "No Hay", Nombre = "Mueble Elegante", Precio = 4999.99m},
-
-            new Furniture { Id = 2, Color = "Rojo", Descripcion = "Mueble Rojo de tela fina",
-            Image = "No Hay", Nombre = "Mueble Elegante", Precio = 4999.99m},
-
-            new Furniture { Id = 3, Color = "Rojo", Descripcion = "Mueble Rojo de tela fina",
-            Image = "No Hay", Nombre = "Mueble Elegante", Precio = 4999.99m},
-
-            new Furniture { Id = 4, Color = "Rojo", Descripcion = "Mueble Rojo de tela fina",
-            Image = "No Hay", Nombre = "Mueble Elegante", Precio = 4999.99m},
-            
-        };
+            _context = context;
+        }
 
         [HttpGet]
-        public List<Furniture> GetMuebles()
+        public IActionResult GetMuebles()
         {
+            var FurnitureList = _context.Furnitures.ToList();
+            if (FurnitureList == Enumerable.Empty<Furniture>())
+                return NoContent();
+            else
+                return Ok(FurnitureList);
+        }
+
+        [HttpPost]
+        public IActionResult SaveMueble(Furniture model)
+        {
+            try
+            {
+                _context.Furnitures.Add(model);
+                _context.SaveChanges();
+                return Ok(model);
+
+            }catch(Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Ocurrio un Error al Guardar la entidad", Exception = ex.Message });
+            }
             
-            return muebles;
         }
 
         [HttpGet("{id}")]
-        public Furniture GetMueble(int id)
+        public IActionResult GetMueble(int id)
         {
-            var MuebeBuscado = muebles.Find(x => x.Id == id);
-            return MuebeBuscado;
-        } 
+            var MuebleBuscado = _context.Furnitures.FirstOrDefault(x => x.Id == id);
+            if(MuebleBuscado == null)
+                return NotFound(new { Message = "No existe registro con ese Id" });
+            else
+            return Ok(MuebleBuscado);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateMueble([FromRoute]int id, [FromBody]Furniture mueble)
+        {
+            var MuebleBuscado = _context.Furnitures.FirstOrDefault(x => x.Id == id);
+            if (MuebleBuscado == null)
+            {
+                return NotFound(new { Message = "No existe registro con ese Id" });
+            }
+
+
+            MuebleBuscado.Nombre = mueble.Nombre;
+            MuebleBuscado.Descripcion = mueble.Descripcion;
+            MuebleBuscado.Color = mueble.Color;
+            MuebleBuscado.Image = mueble.Image;
+            MuebleBuscado.Precio = mueble.Precio;
+
+             _context.Furnitures.Update(MuebleBuscado);
+            _context.SaveChanges();
+
+            return Ok(MuebleBuscado);
+        }
 
     }
 }
