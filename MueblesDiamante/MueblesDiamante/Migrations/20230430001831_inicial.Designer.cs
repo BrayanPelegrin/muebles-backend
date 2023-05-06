@@ -23,7 +23,7 @@ namespace MueblesDiamante.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("MueblesDiamante.Models.Furniture", b =>
+            modelBuilder.Entity("MueblesDiamante.Models.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

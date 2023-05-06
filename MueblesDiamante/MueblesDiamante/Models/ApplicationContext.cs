@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MueblesDiamante.Models.Entities;
 using System.Reflection;
 
 namespace MueblesDiamante.Models
@@ -11,7 +12,9 @@ namespace MueblesDiamante.Models
         }
         public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options) { }
 
-        public DbSet<Furniture> Furnitures { get; set; } 
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<Status> Status { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationContext).Assembly);
