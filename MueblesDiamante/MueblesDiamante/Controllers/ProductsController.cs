@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MueblesDiamante.Models;
+using MueblesDiamante.Models.DTO;
 using MueblesDiamante.Models.Entities;
 
 namespace MueblesDiamante.Controllers
@@ -12,9 +14,11 @@ namespace MueblesDiamante.Controllers
     {
 
         private readonly ApplicationContext _context;
-        public ProductsController(ApplicationContext context)
+        private readonly IMapper _mapper;
+        public ProductsController(ApplicationContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -22,7 +26,7 @@ namespace MueblesDiamante.Controllers
         {
             var FurnitureList = _context.Products.Include(x => x.Category).AsNoTracking().ToList();
 
-            return FurnitureList == Enumerable.Empty<Product>() ? NoContent() : Ok(FurnitureList);             
+            return FurnitureList == Enumerable.Empty<Product>() ? NoContent() : Ok(_mapper.Map<List<ProductDTO>>(FurnitureList));             
             
         }
 
@@ -31,14 +35,16 @@ namespace MueblesDiamante.Controllers
         {
             var MuebleBuscado = _context.Products.Include(x => x.Category).Include(x => x.Status).FirstOrDefault(x => x.Id == id);
 
-            return MuebleBuscado == null ? NotFound(new { Message = "No existe registro con ese Id" }) : Ok(MuebleBuscado);  
+            return MuebleBuscado == null ? NotFound(new { Message = "No existe registro con ese Id" }) : Ok(_mapper.Map<ProductDTO>(MuebleBuscado));  
         }
 
         [HttpPost]
-        public IActionResult SaveMueble(Product model)
+        public IActionResult SaveMueble(ProductCreacionDTO modelDTO)
         {
             try
             {
+                var model = _mapper.Map<Product>(modelDTO);
+                model.StatusId = 1;
                 _context.Products.Add(model);
                 _context.SaveChanges();
                 return Ok(model);
@@ -51,7 +57,7 @@ namespace MueblesDiamante.Controllers
         }
                 
         [HttpPut("{id}")]
-        public IActionResult UpdateMueble([FromRoute]int id, [FromBody]Product mueble)
+        public IActionResult UpdateMueble([FromRoute]int id, [FromBody] ProductCreacionDTO mueble)
         {
             var MuebleBuscado = _context.Products.FirstOrDefault(x => x.Id == id);
             if (MuebleBuscado == null)
@@ -65,8 +71,9 @@ namespace MueblesDiamante.Controllers
             MuebleBuscado.Color = mueble.Color;
             MuebleBuscado.Image = mueble.Image;
             MuebleBuscado.Price = mueble.Price;
+            MuebleBuscado.StatusId = 1;
 
-             _context.Products.Update(MuebleBuscado);
+            _context.Products.Update(MuebleBuscado);
             _context.SaveChanges();
 
             return Ok(MuebleBuscado);

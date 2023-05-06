@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using MueblesDiamante.Models.Entities;
 using MueblesDiamante.Models;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
+using MueblesDiamante.Models.DTO;
 
 namespace MueblesDiamante.Controllers
 {
@@ -11,9 +13,11 @@ namespace MueblesDiamante.Controllers
     public class CategoryController : ControllerBase
     {
         private readonly ApplicationContext _context;
-        public CategoryController(ApplicationContext context)
+        private readonly IMapper _mapper;
+        public CategoryController(ApplicationContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -21,7 +25,7 @@ namespace MueblesDiamante.Controllers
         {
             var CategoryList = _context.Categories.Include(x => x.Products).AsNoTracking().ToList();
 
-            return CategoryList == Enumerable.Empty<Category>() ? NoContent() : Ok(CategoryList);
+            return CategoryList == Enumerable.Empty<Category>() ? NoContent() : Ok(_mapper.Map<List<Category>>(CategoryList));
 
         }
 
@@ -30,14 +34,16 @@ namespace MueblesDiamante.Controllers
         {
             var CategoryFinded = _context.Categories.Include(x => x.Products).FirstOrDefault(x => x.Id == id);
 
-            return CategoryFinded == null ? NotFound(new { Message = "No existe registro con ese Id" }) : Ok(CategoryFinded);
+            return CategoryFinded == null ? NotFound(new { Message = "No existe registro con ese Id" }) : Ok(_mapper.Map<CategoryDTO>(CategoryFinded));
         }
 
         [HttpPost]
-        public IActionResult SaveMueble(Category model)
+        public IActionResult SaveMueble(CategoryCreacionDTO modelDTO)
         {
             try
             {
+                var model = _mapper.Map<Category>(modelDTO);
+                model.StatusId = 1;
                 _context.Categories.Add(model);
                 _context.SaveChanges();
                 return Ok(model);
@@ -51,13 +57,14 @@ namespace MueblesDiamante.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateMueble([FromRoute] int id, [FromBody] Category mueble)
+        public IActionResult UpdateMueble([FromRoute] int id, [FromBody] CategoryCreacionDTO mueble)
         {
             var CategoriaBuscado = _context.Categories.FirstOrDefault(x => x.Id == id);
             if (CategoriaBuscado == null)
                  return NotFound(new { Message = "No existe registro con ese Id" });
             
             CategoriaBuscado.Name = mueble.Name;
+            CategoriaBuscado.StatusId = 1;
             _context.Categories.Update(CategoriaBuscado);
             _context.SaveChanges();
 
